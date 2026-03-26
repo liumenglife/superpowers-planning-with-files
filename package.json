@@ -1,0 +1,26 @@
+{
+  "name": "superpowers-planning-with-files",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "bin": {
+    "spf": "./bin/spf.ts"
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "bun test",
+    "build": "npx tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "eslint": "^10.1.0",
+    "prettier": "^3.8.1",
+    "typescript": "^6.0.2"
+  }
+}

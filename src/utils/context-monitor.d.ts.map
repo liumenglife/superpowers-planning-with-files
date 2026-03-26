@@ -1,0 +1,1 @@
+{"version":3,"file":"context-monitor.d.ts","sourceRoot":"","sources":["context-monitor.ts"],"names":[],"mappings":"AAAA;;GAEG;AACH,MAAM,WAAW,aAAa;IAC5B,UAAU,EAAE,MAAM,CAAC;IACnB,KAAK,EAAE,QAAQ,GAAG,cAAc,GAAG,cAAc,CAAC;IAClD,OAAO,CAAC,EAAE,MAAM,CAAC;CAClB;AAED;;;;;;;;;;GAUG;AACH,wBAAgB,iBAAiB,CAAC,cAAc,EAAE,MAAM,EAAE,UAAU,GAAE,aAAa,GAAG,UAA0B,GAAG,aAAa,CAwB/H"}
