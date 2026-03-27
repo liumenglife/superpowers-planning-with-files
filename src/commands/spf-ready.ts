@@ -1,9 +1,10 @@
-import { checkRecoveryAnchors } from '../utils/anchor-checker';
-import { getContextWarning, ContextStatus } from '../utils/context-monitor';
+import { checkRecoveryAnchors } from "../utils/anchor-checker";
+import { getContextWarning, ContextStatus } from "../utils/context-monitor";
 
 export interface SpfReadyResult {
   isAnchorsComplete: boolean;
   missingAnchors: string[];
+  recommendedAnchors: string[];
   contextStatus: ContextStatus;
   suggestion: string;
 }
@@ -17,30 +18,35 @@ export interface SpfReadyResult {
 export function runSpfReady(
   cwd: string,
   usedPercentage: number,
-  clientType: 'claude-code' | 'opencode' = 'claude-code'
+  clientType: "claude-code" | "opencode" = "claude-code",
 ): SpfReadyResult {
   const anchorResult = checkRecoveryAnchors(cwd);
   const contextStatus = getContextWarning(usedPercentage, clientType);
 
-  let suggestion = '';
+  let suggestion = "";
 
   if (!anchorResult.isComplete) {
     // 锚点不全，不建议切 Session，且必须通知主Agent立即补齐
-    suggestion = `【系统拦截与紧急指令】：恢复锚点不齐全，严禁切 Session！否则将丢失上下文。\n缺失以下文件或配置：\n- ${anchorResult.missing.join('\n- ')}\n\n⚠️ 请主Agent（Main Agent）立即停止其他任务，优先补齐上述缺失的 spec、current.md、decisions.md 等核心 planning 文件，完成后再进行后续操作。`;
+    suggestion = `【系统拦截与紧急指令】：恢复锚点不齐全，严禁切 Session！否则将丢失上下文。\n缺失以下文件或配置：\n- ${anchorResult.missing.join("\n- ")}\n\n⚠️ 请主Agent（Main Agent）立即停止其他任务，优先补齐上述缺失的 spec、current.md、decisions.md 等核心 planning 文件，完成后再进行后续操作。`;
   } else {
     // 锚点全，看 context 百分比
-    if (contextStatus.level === 'NORMAL') {
+    if (contextStatus.level === "NORMAL") {
       suggestion = `上下文使用率较低 (${usedPercentage}%)，当前状态健康，暂不需要切新 Session。`;
     } else {
       // SOFT_WARNING 或 HARD_WARNING，自带 message
-      suggestion = contextStatus.message || '';
+      suggestion = contextStatus.message || "";
+    }
+
+    if (anchorResult.recommendedMissing.length > 0) {
+      suggestion += `\n\n附加提示：尚未发现 spec/plan 文档。若已进入业务分析阶段，请由主Agent及时创建 docs/superpowers/specs/ 或 docs/superpowers/plans/ 下的锚点文件。`;
     }
   }
 
   return {
     isAnchorsComplete: anchorResult.isComplete,
     missingAnchors: anchorResult.missing,
+    recommendedAnchors: anchorResult.recommendedMissing,
     contextStatus,
-    suggestion
+    suggestion,
   };
 }

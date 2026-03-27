@@ -23,32 +23,67 @@ bun install
 bun run install.ts
 ```
 
-安装脚本会自动执行以下两件事：
+安装脚本会自动执行以下五件事：
+
 1. 将 `src/skills/SKILL.md` 复制到您的 `~/.claude/skills/superpowers-planning-with-files/` 目录下，让 Claude Code 自动加载此心智模型。
-2. 将 `spf` 命令行工具全局链接（`bun link`），使您（或您的 Agent）能在终端中随时随地调用 `spf` 命令。
+2. 在 `~/.claude/commands/` 下部署 Claude Code slash commands：`/spf`、`/spf:start`、`/spf:ready`。
+3. 接管 Claude Code 的 `statusLine` 命令，在保留现有 HUD 输出的同时，额外显示 SPF 的 Context 轻/重提示。
+4. 将 `spf` 命令行工具全局链接（`bun link`），使您（或您的 Agent）能在终端中随时随地调用 `spf` 命令。
+5. 将 OpenCode 插件部署到 `~/.config/opencode/plugins/`。
 
 ## 使用说明
 
+### Claude Code slash commands
+
+在 Claude Code 中可直接使用：
+
+```text
+/spf
+/spf:start
+/spf:ready 45
+```
+
+- `/spf`：显示帮助与可用子命令。
+- `/spf:start`：等价于在当前项目根目录执行 `spf start`。
+- `/spf:ready 45`：等价于在当前项目根目录执行 `spf ready 45 claude-code` 的人工检查入口。
+
+### Claude Code 自动提示
+
+Claude Code 原生 Hook 的 stdin 目前并不提供 `context_window.used_percentage`，因此 SPF 在 Claude 端的自动 Context 预警采用 `statusLine` 包装器实现，而不是通过 Hook 直接向模型注入系统提示。
+
+- 当 Context 达到 `40% ~ 50%` 时，status line 会显示轻提示。
+- 当 Context 达到 `>= 51%` 时，status line 会显示重提示。
+- 已存在的 `claude-hud` 等 status line 命令会被保留并包一层，不会被直接覆盖丢失。
+
 ### 1. `spf start`
+
 在任何新项目的根目录执行：
+
 ```bash
 spf start
 ```
+
 **作用**：自动创建 `docs/planning/current.md` 和 `docs/planning/decisions.md`，并注入标准结构。大模型在正式写代码前，必须调用此命令以建立“全局真相”。
 
 ### 2. `spf ready <percentage> [client]`
+
 用于手动检查当前项目是否健康，或者是否需要强制切断并开启新 Session。
+
 ```bash
 spf ready 45
 spf ready 55 opencode
 ```
+
 **作用**：终端会输出详细的评估结果和下一步行动指令（如是否需要执行 `/clear`）。
 
 ### 3. `spf hook <percentage> [client]`
+
 专为生命周期拦截器设计的后台静默指令。
+
 ```bash
 spf hook 40
 ```
+
 **作用**：如果项目处于健康状态，它将不会输出任何内容（静默放行）；但如果发现锚点不全或 Context 压力过大，它会向 `stdout` 输出严厉的系统警告。可用于结合 Claude Code 的钩子生态。
 
 ---
@@ -58,7 +93,9 @@ spf hook 40
 本工具包最核心的护城河在于其“切 Session”判定逻辑。这不是单纯的提示，而是一套**强制阻断机制**。
 
 ### 第一步：恢复锚点齐全度检查 (Anchor Check)
+
 系统会扫描当前项目根目录，检查以下四项是否齐全：
+
 - `docs/planning/current.md`
 - `docs/planning/decisions.md`
 - `docs/superpowers/specs/` 下至少有一个 spec 文件
@@ -67,6 +104,7 @@ spf hook 40
 🔴 **如果缺失**：无论当前 Context 百分比是多少，系统都会**绝对阻断**。它会输出 `【系统拦截与紧急指令】`，强制要求大模型放下手头所有工作，立刻补齐这些文件。因为如果没有这些锚点文件，强行切 Session 就意味着永久丢失项目的上下文记忆。
 
 ### 第二步：上下文压力监控 (Context Monitor)
+
 如果第一步检查通过（锚点齐全），系统才会评估传入的上下文使用率 (`percentage`)：
 
 - 🟢 **< 40% (Normal)**：上下文充裕，静默放行，大模型可以自由写代码。
