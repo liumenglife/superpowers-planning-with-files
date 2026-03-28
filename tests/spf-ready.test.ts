@@ -19,6 +19,7 @@ describe("Command: /spf-ready", () => {
     expect(result.isAnchorsComplete).toBe(false);
     expect(result.suggestion).toContain("严禁切 Session");
     expect(result.suggestion).toContain("docs/planning/current.md");
+    expect(result.suggestion).toContain("docs/planning/history.md");
     expect(result.suggestion).toContain(
       "请主Agent（Main Agent）立即停止其他任务，优先补齐上述缺失",
     );
@@ -26,6 +27,8 @@ describe("Command: /spf-ready", () => {
 
   it("should allow ready and give normal suggestion after /spf:start even without spec or plan", () => {
     fs.mkdirSync(path.join(TEST_DIR, "docs", "planning"), { recursive: true });
+    fs.writeFileSync(path.join(TEST_DIR, "PRINCIPLE.md"), "# Principle");
+    fs.writeFileSync(path.join(TEST_DIR, "CLAUDE.md"), "# Claude");
     fs.writeFileSync(
       path.join(TEST_DIR, "docs", "planning", "current.md"),
       "# Current",
@@ -33,6 +36,10 @@ describe("Command: /spf-ready", () => {
     fs.writeFileSync(
       path.join(TEST_DIR, "docs", "planning", "decisions.md"),
       "# Decisions",
+    );
+    fs.writeFileSync(
+      path.join(TEST_DIR, "docs", "planning", "history.md"),
+      "# History",
     );
 
     const result = runSpfReady(TEST_DIR, 30, "claude-code");
@@ -44,6 +51,8 @@ describe("Command: /spf-ready", () => {
 
   it("should output soft warning at 45% even before spec or plan exist", () => {
     fs.mkdirSync(path.join(TEST_DIR, "docs", "planning"), { recursive: true });
+    fs.writeFileSync(path.join(TEST_DIR, "PRINCIPLE.md"), "# Principle");
+    fs.writeFileSync(path.join(TEST_DIR, "CLAUDE.md"), "# Claude");
     fs.writeFileSync(
       path.join(TEST_DIR, "docs", "planning", "current.md"),
       "# Current",
@@ -51,6 +60,10 @@ describe("Command: /spf-ready", () => {
     fs.writeFileSync(
       path.join(TEST_DIR, "docs", "planning", "decisions.md"),
       "# Decisions",
+    );
+    fs.writeFileSync(
+      path.join(TEST_DIR, "docs", "planning", "history.md"),
+      "# History",
     );
 
     const result = runSpfReady(TEST_DIR, 45, "claude-code");
@@ -61,6 +74,8 @@ describe("Command: /spf-ready", () => {
 
   it("should output hard warning if planning anchors exist and context high", () => {
     fs.mkdirSync(path.join(TEST_DIR, "docs", "planning"), { recursive: true });
+    fs.writeFileSync(path.join(TEST_DIR, "PRINCIPLE.md"), "# Principle");
+    fs.writeFileSync(path.join(TEST_DIR, "CLAUDE.md"), "# Claude");
     fs.writeFileSync(
       path.join(TEST_DIR, "docs", "planning", "current.md"),
       "# Current",
@@ -68,6 +83,10 @@ describe("Command: /spf-ready", () => {
     fs.writeFileSync(
       path.join(TEST_DIR, "docs", "planning", "decisions.md"),
       "# Decisions",
+    );
+    fs.writeFileSync(
+      path.join(TEST_DIR, "docs", "planning", "history.md"),
+      "# History",
     );
 
     const result = runSpfReady(TEST_DIR, 55, "opencode");

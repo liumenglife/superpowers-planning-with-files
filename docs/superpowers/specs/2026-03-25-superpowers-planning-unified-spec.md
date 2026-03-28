@@ -70,6 +70,14 @@ Claude Code 作为本增强插件的重要核心引擎（“左翼”），其�
 - **`/spf:start`**：作为主动型工具提供给大模型调用，用于在一片空白的工程中快速拉起 `docs/planning` 基建防线；底层复用 `spf start` CLI。
 - **`/spf:ready <percentage>`**：作为开发者的人工核查探针，用于手动审计当前项目的真实生命体征（Context + 文件完整度）；底层复用 `spf ready <percentage> claude-code` 的同一套判断核心。
 
+### 3.4 编码阶段协作协议 (Subagent-Driven Development)
+
+- 一旦进入编码阶段，主 Agent 必须先把任务拆解成可执行 Task，并写回 `docs/planning/current.md`，再派发新 subagent 执行。
+- 子 Agent 只负责局部实现，不直接修改全局规划状态。
+- 子 Agent 回传结果后，主 Agent 再统一更新 `current.md`、`decisions.md` 和下一步唯一动作。
+- `current.md` 只保留当前批次，历史批次必须整体迁移到 `docs/planning/history.md`。
+- `history.md` 需要保留每个 Task 的状态标记，至少区分 `[✓]`、`[•]`、`[ ]`。
+
 ---
 
 ## 4. OpenCode 适配层设计 (深度原生集成)

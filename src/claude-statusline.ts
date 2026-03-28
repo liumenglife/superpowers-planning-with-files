@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { spawnSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { runSpfReady } from "./commands/spf-ready";
@@ -35,6 +36,12 @@ export interface InstallClaudeStatusLineResult {
   configPath: string;
   wrapperCommand: string;
   baseCommand: string | null;
+}
+
+export interface StatusLineState {
+  baseCommand: string | null;
+  repoRoot: string;
+  lastNotice?: string | null;
 }
 
 export function resolveContextPercentage(stdin: ClaudeStatusLineInput): number {
@@ -83,6 +90,52 @@ export function buildStatusLineNotice(
   return null;
 }
 
+export function resolveStatusLineCwd(
+  cwdFromInput: string | undefined,
+  fallbackCwd: string,
+): string {
+  if (cwdFromInput && cwdFromInput.trim().length > 0) {
+    return cwdFromInput;
+  }
+
+  return fallbackCwd;
+}
+
+export function buildMacOSNotificationScript(message: string): string {
+  const escapedMessage = escapeAppleScriptString(message);
+  return `display notification "${escapedMessage}" with title "SPF"`;
+}
+
+export function buildMacOSAlertScript(
+  message: string,
+  autoDismissSeconds?: number,
+): string {
+  const escapedMessage = escapeAppleScriptString(message);
+  const givingUpAfter =
+    typeof autoDismissSeconds === "number" && autoDismissSeconds > 0
+      ? ` giving up after ${Math.round(autoDismissSeconds)}`
+      : "";
+
+  return `display alert "SPF" message "${escapedMessage}" as critical${givingUpAfter}`;
+}
+
+export function notifyMacOS(message: string): boolean {
+  if (process.platform !== "darwin") {
+    return false;
+  }
+
+  const result = spawnSync(
+    "osascript",
+    ["-e", buildMacOSNotificationScript(message)],
+    {
+      encoding: "utf8",
+      stdio: "ignore",
+    },
+  );
+
+  return result.status === 0;
+}
+
 export function getStatusLineWrapperCommand(
   repoRoot: string,
   bunExec: string,
@@ -115,7 +168,11 @@ export function installClaudeStatusLine(
   fs.mkdirSync(supportDir, { recursive: true });
   fs.writeFileSync(
     configPath,
-    JSON.stringify({ baseCommand }, null, 2),
+    JSON.stringify(
+      { baseCommand, repoRoot: options.repoRoot, lastNotice: null },
+      null,
+      2,
+    ),
     "utf8",
   );
 
@@ -155,4 +212,33 @@ function readBaseCommand(configPath: string): string | null {
     baseCommand?: string | null;
   };
   return parsed.baseCommand ?? null;
+}
+
+export function readStatusLineState(configPath: string): StatusLineState {
+  if (!fs.existsSync(configPath)) {
+    return { baseCommand: null, repoRoot: "", lastNotice: null };
+  }
+
+  const parsed = JSON.parse(fs.readFileSync(configPath, "utf8")) as {
+    baseCommand?: string | null;
+    repoRoot?: string;
+    lastNotice?: string | null;
+  };
+
+  return {
+    baseCommand: parsed.baseCommand ?? null,
+    repoRoot: parsed.repoRoot ?? "",
+    lastNotice: parsed.lastNotice ?? null,
+  };
+}
+
+export function writeStatusLineState(
+  configPath: string,
+  state: StatusLineState,
+): void {
+  fs.writeFileSync(configPath, JSON.stringify(state, null, 2), "utf8");
+}
+
+function escapeAppleScriptString(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }

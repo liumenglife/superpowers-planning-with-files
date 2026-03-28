@@ -51,6 +51,8 @@ describe("Claude command templates", () => {
     );
     expect(content).toContain("/spf:start");
     expect(content).toContain("/spf:ready 45");
+    expect(content).toContain("PRINCIPLE.md");
+    expect(content).toContain("CLAUDE.md");
   });
 
   it("should render the start command to run spf start", () => {
@@ -58,7 +60,7 @@ describe("Claude command templates", () => {
 
     expect(content).toContain("description: 初始化 planning 工作流文件");
     expect(content).toContain("Bash(spf start:*)");
-    expect(content).toContain("`spf start`");
+    expect(content).toContain("`spf start claude-code`");
   });
 
   it("should render the ready command to require a percentage argument", () => {
