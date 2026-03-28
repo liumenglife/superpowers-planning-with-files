@@ -4,9 +4,10 @@
 
 ## 核心能力
 
-1. **规范强制落地 (Skill)**：包含专为 Claude Code 编写的 `SKILL.md`，从思想层面约束主 Agent 必须使用 `current.md` 和 `decisions.md` 来追踪任务和架构决策。
-2. **自动化初始化 (CLI - Start)**：提供一键命令，光速在项目中生成标准化、防偏航的规划文件模板。
+1. **规范强制落地 (Skill)**：包含专为 Claude Code 编写的 `SKILL.md`，共享规则收敛在 `PRINCIPLE.md`，从思想层面约束主 Agent 追踪任务和架构决策。
+2. **自动化初始化 (CLI - Start)**：提供一键命令，光速在项目中生成标准化、防偏航的规则文件与规划文件模板。
 3. **双步防线校验模型 (CLI - Ready & Hook)**：提供基于文件锚点和上下文百分比的智能拦截算法。
+4. **子 Agent 开发约束**：代码实现阶段的独立 Task 默认优先并行派发 subagent，主 Agent 先拆任务、先写进 `current.md`，再执行。
 
 ## 安装指南
 
@@ -53,6 +54,7 @@ Claude Code 原生 Hook 的 stdin 目前并不提供 `context_window.used_percen
 
 - 当 Context 达到 `40% ~ 50%` 时，status line 会显示轻提示。
 - 当 Context 达到 `>= 51%` 时，status line 会显示重提示。
+- 轻提示会自动消失，当前实现是 3 秒后关闭。
 - 已存在的 `claude-hud` 等 status line 命令会被保留并包一层，不会被直接覆盖丢失。
 
 ### 1. `spf start`
@@ -63,7 +65,9 @@ Claude Code 原生 Hook 的 stdin 目前并不提供 `context_window.used_percen
 spf start
 ```
 
-**作用**：自动创建 `docs/planning/current.md` 和 `docs/planning/decisions.md`，并注入标准结构。大模型在正式写代码前，必须调用此命令以建立“全局真相”。
+**作用**：自动创建 `PRINCIPLE.md`、`CLAUDE.md` / `AGENTS.md` 和 `docs/planning/current.md`、`docs/planning/decisions.md`，并注入标准结构。大模型在正式写代码前，必须调用此命令以建立“全局真相”。
+
+`current.md` 里会额外包含编码阶段任务清单和子 Agent 执行协议。`history.md` 负责保存迁移出去的历史 Task 批次，并保留 Todo 状态：`[✓]` 完成、`[•]` 进行中、`[ ]` 未开始。`history.md` 也是恢复锚点之一。进入代码实现阶段后，主 Agent 应优先并行派发 independent tasks，不能只在聊天里记任务。Claude Code 侧默认检查 `CLAUDE.md`，OpenCode 侧默认检查 `AGENTS.md`。`/spf:start` 会把对应客户端的主指令文件和 planning 文件一起补齐。
 
 ### 2. `spf ready <percentage> [client]`
 

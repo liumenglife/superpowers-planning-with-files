@@ -23,9 +23,15 @@ describe("Hook: planningContextHook", () => {
 
   it("should return null (silent) if planning anchors are complete and context is low", () => {
     fs.mkdirSync(path.join(TEST_DIR, "docs", "planning"), { recursive: true });
+    fs.writeFileSync(path.join(TEST_DIR, "PRINCIPLE.md"), "# Principle");
+    fs.writeFileSync(path.join(TEST_DIR, "CLAUDE.md"), "# Claude");
     fs.writeFileSync(
       path.join(TEST_DIR, "docs", "planning", "current.md"),
       "# Current",
+    );
+    fs.writeFileSync(
+      path.join(TEST_DIR, "docs", "planning", "history.md"),
+      "# History",
     );
     fs.writeFileSync(
       path.join(TEST_DIR, "docs", "planning", "decisions.md"),
@@ -38,14 +44,23 @@ describe("Hook: planningContextHook", () => {
 
   it("should return warning message if planning anchors are complete but context is high", () => {
     fs.mkdirSync(path.join(TEST_DIR, "docs", "planning"), { recursive: true });
+    fs.writeFileSync(path.join(TEST_DIR, "PRINCIPLE.md"), "# Principle");
+    fs.writeFileSync(path.join(TEST_DIR, "CLAUDE.md"), "# Claude");
     fs.writeFileSync(
       path.join(TEST_DIR, "docs", "planning", "current.md"),
       "# Current",
     );
     fs.writeFileSync(
+      path.join(TEST_DIR, "docs", "planning", "history.md"),
+      "# History",
+    );
+    fs.writeFileSync(
       path.join(TEST_DIR, "docs", "planning", "decisions.md"),
       "# Decisions",
     );
+
+    fs.writeFileSync(path.join(TEST_DIR, "AGENTS.md"), "# Agents");
+    fs.writeFileSync(path.join(TEST_DIR, "PRINCIPLE.md"), "# Principle");
 
     const hookMessageSoft = planningContextHook(TEST_DIR, 45, "claude-code");
     expect(hookMessageSoft).not.toBeNull();

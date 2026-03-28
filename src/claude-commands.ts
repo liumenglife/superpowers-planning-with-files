@@ -20,7 +20,7 @@ export const CLAUDE_COMMAND_DEFINITIONS: ClaudeCommandDefinition[] = [
       "你正在执行 superpowers-planning-with-files 的 Claude Code 聚合命令。",
       "",
       "请直接告诉用户当前可用命令：",
-      "- `/spf:start`：初始化 `docs/planning/current.md` 与 `docs/planning/decisions.md`。",
+      "- `/spf:start`：初始化 `PRINCIPLE.md`、`CLAUDE.md` 与 `docs/planning/current.md`、`docs/planning/history.md`、`docs/planning/decisions.md`。",
       "- `/spf:ready 45`：按给定上下文百分比检查是否该切 Session。",
       "- `/spf ready 45`：与 `/spf:ready 45` 等价。",
       "",
@@ -33,7 +33,7 @@ export const CLAUDE_COMMAND_DEFINITIONS: ClaudeCommandDefinition[] = [
     description: "初始化 planning 工作流文件",
     allowedTools: ["Bash(spf start:*)"],
     body: [
-      "使用 Bash 工具在当前工作目录执行 `spf start`。",
+      "使用 Bash 工具在当前工作目录执行 `spf start claude-code`。",
       "",
       "要求：",
       "1. 不要询问用户是否继续。",

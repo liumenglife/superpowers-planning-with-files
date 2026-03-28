@@ -15,11 +15,14 @@ describe("Anchor Checker", () => {
     fs.rmSync(TEST_DIR, { recursive: true, force: true });
   });
 
-  it("should detect blocking planning anchors when current and decisions are missing", () => {
+  it("should detect blocking planning anchors when current, history and decisions are missing", () => {
     const result = checkRecoveryAnchors(TEST_DIR);
     expect(result.isComplete).toBe(false);
     expect(result.missing).toContain("docs/planning/current.md");
+    expect(result.missing).toContain("docs/planning/history.md");
     expect(result.missing).toContain("docs/planning/decisions.md");
+    expect(result.missing).toContain("PRINCIPLE.md");
+    expect(result.missing).toContain("CLAUDE.md");
     expect(result.recommendedMissing).toContain(
       "spec/plan files (in docs/superpowers/specs/ or docs/superpowers/plans/)",
     );
@@ -27,9 +30,15 @@ describe("Anchor Checker", () => {
 
   it("should pass when planning anchors are present even before spec or plan exist", () => {
     fs.mkdirSync(path.join(TEST_DIR, "docs", "planning"), { recursive: true });
+    fs.writeFileSync(path.join(TEST_DIR, "PRINCIPLE.md"), "# Principle");
+    fs.writeFileSync(path.join(TEST_DIR, "CLAUDE.md"), "# Claude");
     fs.writeFileSync(
       path.join(TEST_DIR, "docs", "planning", "current.md"),
       "# Current",
+    );
+    fs.writeFileSync(
+      path.join(TEST_DIR, "docs", "planning", "history.md"),
+      "# History",
     );
     fs.writeFileSync(
       path.join(TEST_DIR, "docs", "planning", "decisions.md"),
@@ -46,9 +55,15 @@ describe("Anchor Checker", () => {
 
   it("should clear the recommendation when a spec exists", () => {
     fs.mkdirSync(path.join(TEST_DIR, "docs", "planning"), { recursive: true });
+    fs.writeFileSync(path.join(TEST_DIR, "PRINCIPLE.md"), "# Principle");
+    fs.writeFileSync(path.join(TEST_DIR, "CLAUDE.md"), "# Claude");
     fs.writeFileSync(
       path.join(TEST_DIR, "docs", "planning", "current.md"),
       "# Current",
+    );
+    fs.writeFileSync(
+      path.join(TEST_DIR, "docs", "planning", "history.md"),
+      "# History",
     );
     fs.writeFileSync(
       path.join(TEST_DIR, "docs", "planning", "decisions.md"),
@@ -63,6 +78,35 @@ describe("Anchor Checker", () => {
     );
 
     const result = checkRecoveryAnchors(TEST_DIR);
+    expect(result.isComplete).toBe(true);
+    expect(result.recommendedMissing).toHaveLength(0);
+  });
+
+  it("should recommend AGENTS.md for opencode projects", () => {
+    fs.mkdirSync(path.join(TEST_DIR, "docs", "planning"), { recursive: true });
+    fs.writeFileSync(path.join(TEST_DIR, "PRINCIPLE.md"), "# Principle");
+    fs.writeFileSync(path.join(TEST_DIR, "AGENTS.md"), "# Agents");
+    fs.writeFileSync(
+      path.join(TEST_DIR, "docs", "planning", "current.md"),
+      "# Current",
+    );
+    fs.writeFileSync(
+      path.join(TEST_DIR, "docs", "planning", "history.md"),
+      "# History",
+    );
+    fs.writeFileSync(
+      path.join(TEST_DIR, "docs", "planning", "decisions.md"),
+      "# Decisions",
+    );
+    fs.mkdirSync(path.join(TEST_DIR, "docs", "superpowers", "specs"), {
+      recursive: true,
+    });
+    fs.writeFileSync(
+      path.join(TEST_DIR, "docs", "superpowers", "specs", "2026-03-25-spec.md"),
+      "# Spec",
+    );
+
+    const result = checkRecoveryAnchors(TEST_DIR, "opencode");
     expect(result.isComplete).toBe(true);
     expect(result.recommendedMissing).toHaveLength(0);
   });
